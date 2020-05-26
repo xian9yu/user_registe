@@ -3,4 +3,4 @@ gin+xorm+mysql+redis实现的用户注册demo，mvc结构
 
 
 ## License
-[License](MIT LICENSE)
+[MIT License](LICENSE)
