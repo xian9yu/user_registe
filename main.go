@@ -1,9 +1,9 @@
 package main
 
 import (
-	"democ/ctrls"
-	"democ/models"
 	"log"
+	"user_register/ctrls"
+	"user_register/models"
 
 	"github.com/gin-gonic/gin"
 )

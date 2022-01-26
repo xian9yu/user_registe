@@ -1,9 +1,9 @@
 package ctrls
 
 import (
-	"democ/models"
 	"net/http"
 	"strconv"
+	"user_register/models"
 
 	"github.com/gin-gonic/gin"
 )
