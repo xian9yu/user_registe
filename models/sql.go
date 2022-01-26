@@ -1,41 +1,50 @@
 package models
 
 import (
-	"gorm.io/driver/mysql"
-	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
-	"gorm.io/gorm/schema"
 	"log"
-	"os"
 	"time"
+
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/gomodule/redigo/redis"
+	"xorm.io/xorm"
 )
 
-var DB *gorm.DB
+var DB *xorm.Engine
 
-// InitSQL 初始化sql
-func InitSQL() *gorm.DB {
-	dsn := "gorm:gggorm@tcp(127.0.0.1:3306)/gorm?charset=utf8"
-	DB, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
-		NamingStrategy: schema.NamingStrategy{
-			//TablePrefix:   "db_", // 表名前缀，`User` 的表名应该是 `t_users`
-			SingularTable: true, // 使用单数表名，启用该选项，此时，`User` 的表名应该是 `we_user`
-		},
-		Logger: logger.New(
-			log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
-			logger.Config{
-				SlowThreshold: time.Nanosecond, // 慢 SQL 阈值
-				LogLevel:      logger.Info,     // Log level
-				Colorful:      true,            // 彩色打印
-			},
-		),
-	})
+//初始化sql
+func InitSQL() {
+	var err error
+	DB, err = xorm.NewEngine("mysql", "register:register@tcp(127.0.0.1:3306)/register?charset=utf8")
 	if err != nil {
-		log.Fatalln("MySQL启动异常")
+		log.Fatal("Disconnected database:", err)
 	}
 
-	if err = DB.AutoMigrate(&User{}); err != nil {
-		log.Println("同步数据库表失败:", err.Error())
-
+	if err = DB.Sync2(new(User)); err != nil {
+		//if err != nil {
+		log.Fatal("Failed to sync tables :", err)
+		return
 	}
-	return DB
+	//DB.Close()
+	//最大连接池空闲数(连接池空闲数 = ((核心数 * 2) + 有效磁盘数))
+	DB.SetMaxIdleConns(3)
+	//最大连接数
+	DB.SetMaxOpenConns(100)
+
+}
+
+var (
+	redisAddr = "127.0.0.1:6379"
+	redisPwd  = "123456"
+)
+
+//初始化Redis （使用 redigo连接池）
+func RedisPool() *redis.Pool {
+	return &redis.Pool{
+		MaxIdle:     1024,               //Linux下使用 ulimit -n 命令查看，Linux默认最大值为 1024
+		MaxActive:   256,                //最大空闲连接数
+		Wait:        true,               //超过最大连接，报错or等待
+		IdleTimeout: time.Second * 1000, //空闲连接超时时间
+		// Dial or DialContext must be set. When both are set, DialContext takes precedence over Dial.
+		Dial: func() (redis.Conn, error) { return redis.Dial("tcp", redisAddr, redis.DialPassword(redisPwd)) },
+	}
 }

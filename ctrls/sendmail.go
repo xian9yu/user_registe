@@ -1,10 +1,10 @@
 package ctrls
 
 import (
+	"democ/models"
 	"fmt"
 	"math/rand"
 	"time"
-	"user_register/models"
 
 	"gopkg.in/gomail.v2"
 )
@@ -26,8 +26,8 @@ func setAndSend(email string) {
 func sendMail(code string, sjr string) {
 	m := gomail.NewMessage()
 	m.SetAddressHeader("From", "xian9yu@gmail.com", "注册验证邮件") // 发件人
-	m.SetHeader("To", m.FormatAddress(sjr, "111"))            //收件人
-	m.SetHeader("Subject", "网站验证激活邮件")                        // 主题
+	m.SetHeader("To", m.FormatAddress(sjr, "111"))                  //收件人
+	m.SetHeader("Subject", "网站验证激活邮件")                              // 主题
 	body := "点击链接即可激活账号，1小时内有效，请尽快完成激活：" + "http://localhost:8080/auth?email=" + sjr + "&" + "code=" + code
 	//"<a href='http://localhost:8080/auth/?email=" + sjr + "&" + "code=" + code + ">点击激活</a><br>"
 	m.SetBody("text/html", body) // 正文
